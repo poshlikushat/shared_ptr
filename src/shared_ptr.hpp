@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <tuple>
 #include <memory>
-
 template<typename T, typename D = std::default_delete<T>>
+requires (!std::is_void_v<T>)
 class SharedPtr {
     struct ControlBlock {
         std::tuple<T*, size_t, D> data;
@@ -17,7 +17,7 @@ class SharedPtr {
         if (cb) ++std::get<1>(cb->data);
     }
 
-    void decrement_ref_count() {
+    void decrement_ref_count() noexcept {
         if (cb) {
             auto& cnt = std::get<1>(cb->data);
             if (--cnt == 0) {
@@ -89,6 +89,7 @@ public:
 };
 
 template<typename T, typename... Args>
+requires (!std::is_void_v<T>)
 SharedPtr<T> make_shared(Args&&... args) {
     return SharedPtr<T>(new T(std::forward<Args>(args)...));
 }
